@@ -5,9 +5,15 @@ import Field
 import Control.Monad
 import UI.NCurses
 
-import System.Random
 
-sample x = return.(x!!)=<<randomRIO(0,length x-1)
+type RngGen = Int
+
+rnd_new = 1
+
+rnd_get gen = (gen, gen+1)
+
+random_figure_type value = figure_types !! (value `mod` (length figure_types))
+
 
 do_render window field = do
   updateWindow window $ do
@@ -16,14 +22,14 @@ do_render window field = do
     drawString $ show_field field
   render
 
-field_iteration field =
+field_iteration field rnd_gen =
   if can_fall field
-    then step_fall field
-    else add_figure (complete_fall field) generate_random_figure
+    then (step_fall field, rnd_gen)
+    else let (fig, rnd_gen2) = generate_random_figure rnd_gen
+         in (add_figure (complete_fall field) fig, rnd_gen2)
 
 
-game_iteration:: Window -> Field -> Curses ()
-game_iteration window field = do
+game_iteration window rnd_gen field = do
   do_render window field
   if has_collision field
     then do
@@ -33,21 +39,28 @@ game_iteration window field = do
       getEvent window Nothing
       closeWindow window
     else do
-      e <- getEvent window (Just 100)
+      e <- getEvent window (Just 1000)
       case e of
         Just (EventCharacter char) ->
           case char of
             'q' -> closeWindow window
-            's' -> game_iteration window $ field_iteration field
-            _ -> game_iteration window $ apply_command field char
-        _ -> game_iteration window $ field_iteration field
+            's' -> let (field2, rnd_gen2) = field_iteration field rnd_gen
+                   in game_iteration window rnd_gen2 field2
+            _ -> game_iteration window rnd_gen $ apply_command field char
+        _ -> let (field2, rnd_gen2) = field_iteration field rnd_gen
+             in game_iteration window rnd_gen2 field2
 
-generate_random_figure = do
-  generate_figure 'I' 2
+generate_random_figure rnd_gen =
+  let (rnd_value1, rnd_gen1) = rnd_get rnd_gen
+      (rnd_value2, rnd_gen2) = rnd_get rnd_gen1
+      fig = generate_figure (random_figure_type rnd_value1) (rnd_value2 `mod` 4)
+  in (fig, rnd_gen2)
 
 
 main :: IO ()
 main = runCurses $ do
   setEcho False
   window <- defaultWindow
-  game_iteration window $ add_figure empty_field generate_random_figure
+  let (fig, rnd_gen) = generate_random_figure rnd_new
+  return ()
+  game_iteration window rnd_gen (add_figure empty_field fig)
