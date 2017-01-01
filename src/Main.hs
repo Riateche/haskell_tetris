@@ -5,7 +5,7 @@ import Field
 import Control.Monad
 import UI.NCurses
 
-apply_action field char = field
+
 
 do_render window field = do
   updateWindow window $ do
@@ -24,16 +24,21 @@ game_iteration:: Window -> Field -> Curses ()
 game_iteration window field = do
   do_render window field
   if has_collision field
-    then closeWindow window
+    then do
+      updateWindow window $ do
+        drawString "\nGame Over!\n"
+      render
+      getEvent window Nothing
+      closeWindow window
     else do
-      e <- getEvent window (Just 300)
+      e <- getEvent window (Just 100)
       case e of
         Just x ->
           case x of
             EventCharacter char ->
               case char of
                 'q' -> closeWindow window
-                _ -> game_iteration window $ apply_action field char
+                _ -> game_iteration window $ apply_command field char
         Nothing -> game_iteration window $ field_iteration field
 
 

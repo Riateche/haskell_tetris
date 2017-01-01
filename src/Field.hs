@@ -18,7 +18,14 @@ add_figure_item x _ = x
 
 
 empty_field = replicate height (replicate width 0)
-show_field d = intercalate "\n" (map show d)
+
+show_cell value | value == 0 = ".."
+                | value == static_value = "██"
+                | value == falling_value = "▓▓"
+                | value == collision_value = "░░"
+
+show_field :: Field -> String
+show_field field = intercalate "\n" $ map (\x -> intercalate "" (map show_cell x)) field
 
 generate_figure :: String -> Field
 generate_figure name =
@@ -46,7 +53,6 @@ can_fall_column col =
 can_fall field = all can_fall_column (transpose field)
 
 step_fall field = transpose (map step_fall_column (transpose field))
-apply_command field line = field
 
 complete_fall_one x | x == falling_value = static_value
 complete_fall_one x = x
@@ -67,4 +73,14 @@ separate_column col =
       old_dynamic = map (filter_int falling_value) col
       dynamic = 0:(init old_dynamic)
       in (static, dynamic)
+
+apply_command field char | char == 'd' =
+  if all can_fall_column field
+    then map step_fall_column field
+    else field
+
+apply_command field char | char == 'a' =
+  if all can_fall_column (map reverse field)
+    then map reverse (map step_fall_column (map reverse field))
+    else field
 
