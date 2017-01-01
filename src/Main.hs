@@ -5,7 +5,9 @@ import Field
 import Control.Monad
 import UI.NCurses
 
+import System.Random
 
+sample x = return.(x!!)=<<randomRIO(0,length x-1)
 
 do_render window field = do
   updateWindow window $ do
@@ -17,7 +19,7 @@ do_render window field = do
 field_iteration field =
   if can_fall field
     then step_fall field
-    else add_figure (complete_fall field) (generate_figure "test")
+    else add_figure (complete_fall field) generate_random_figure
 
 
 game_iteration:: Window -> Field -> Curses ()
@@ -33,61 +35,19 @@ game_iteration window field = do
     else do
       e <- getEvent window (Just 100)
       case e of
-        Just x ->
-          case x of
-            EventCharacter char ->
-              case char of
-                'q' -> closeWindow window
-                _ -> game_iteration window $ apply_command field char
-        Nothing -> game_iteration window $ field_iteration field
+        Just (EventCharacter char) ->
+          case char of
+            'q' -> closeWindow window
+            's' -> game_iteration window $ field_iteration field
+            _ -> game_iteration window $ apply_command field char
+        _ -> game_iteration window $ field_iteration field
+
+generate_random_figure = do
+  generate_figure 'I' 2
 
 
 main :: IO ()
 main = runCurses $ do
   setEcho False
   window <- defaultWindow
-  game_iteration window $ add_figure empty_field (generate_figure "test")
-
-
-
-
-
-
-
-
-
-
-
-
-
---put_field field = do
---  putStrLn "Field:"
---  putStrLn (show_field field)
---  hFlush stdout
---
---start_new_figure field = do
--- let field2 = add_figure field (generate_figure "test")
--- if has_collision field2
---   then do
---     put_field field2
---     putStrLn "Game Why No Space Over"
---   else query_command field2
---
---query_command field = do
---  put_field field
---  putStrLn "Command:"
---  hFlush stdout
---  line <- getLine
---  let new_field = apply_command (field) line
---  put_field new_field
---  if can_fall new_field
---    then query_command (step_fall new_field)
---    else do
---      let f = complete_fall new_field
---      put_field f
---      start_new_figure f
---
---
---
-----main :: IO ()
-----main = start_new_figure empty_field
+  game_iteration window $ add_figure empty_field generate_random_figure
