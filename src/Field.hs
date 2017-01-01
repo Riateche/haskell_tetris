@@ -55,6 +55,14 @@ generate_figure t rotation =
       left = (width - figure_columns) `div` 2
   in expand_figure rotated_figure 0 left
 
+
+can_expand_figure figure top left =
+  let figure_columns = length $ head figure
+      figure_rows = length figure
+      right = width - figure_columns - left
+      bottom = height - figure_rows - top
+  in right >= 0 && bottom >= 0
+
 expand_figure figure top left =
   let figure_columns = length $ head figure
       figure_rows = length figure
@@ -103,6 +111,11 @@ separate_column col =
       dynamic = 0:(init old_dynamic)
       in (static, dynamic)
 
+has_correct_size field = (length field) == height && (length (head field)) == width
+
+has_no_collisions field1 field2 =
+  all (\(st, dy) -> all (\(x, y) -> x * y == 0) (zip st dy)) (zip field1 field2)
+
 apply_command field char | char == 'd' =
   if all can_fall_column field
     then map step_fall_column field
@@ -113,10 +126,26 @@ apply_command field char | char == 'a' =
     then map (reverse . step_fall_column . reverse) field
     else field
 
+
+
+apply_command field char | char == 'w' =
+  let static = map (map (filter_int static_value)) field
+      dynamic = map (map (filter_int falling_value)) field
+      figure = cut_figure dynamic
+      top = top_offset dynamic
+      left = left_offset dynamic
+      rotated = rotate_figure figure
+      expanded = expand_figure rotated top left
+  in if (has_no_collisions static expanded) && (can_expand_figure rotated top left)
+       then zipWith (zipWith (+)) static expanded
+       else field
+
+
+
 apply_command field _ = field
 
 cut_figure dynamic =
-  let cut = filter (all (==0))
+  let cut = filter (any (>0))
   in transpose $ cut $ transpose $ cut $ dynamic
 
 top_offset figure = fromJust $ findIndex (any (>0)) figure
@@ -125,8 +154,3 @@ left_offset figure = top_offset $ transpose figure
 
 rotate_figure figure = map reverse $ transpose figure
 
---rotate_command field =
---  let static = map (map (filter_int static_value)) field
---      dynamic = map (map (filter_int falling_value)) field
---      figure = cut_figure dynamic
---      rotated = map inverse $ transpose figure

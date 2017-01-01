@@ -20,6 +20,7 @@ do_render window field = do
     clear
     moveCursor 0 0
     drawString $ show_field field
+    drawString "\n\n"
   render
 
 field_iteration field rnd_gen =
