@@ -37,6 +37,17 @@ has_collision field = elem collision_value (intercalate [] field)
 
 can_fall field = True
 
-step_fall field = field
+step_fall field = transpose (map step_fall_column (transpose field))
 apply_command field line = field
 complete_fall field = field
+
+step_fall_column :: [Integer] -> [Integer]
+
+filter_int v x | x == v = x
+filter_int v x = 0
+
+step_fall_column col = do
+  let static = map (filter_int static_value) col
+  let dynamic = map (filter_int falling_value) col
+  zipWith (+) static (0:(init dynamic))
+
