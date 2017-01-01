@@ -82,7 +82,11 @@ step_fall field = transpose (map step_fall_column (transpose field))
 complete_fall_one x | x == falling_value = static_value
 complete_fall_one x = x
 
-complete_fall field = map (map complete_fall_one) field
+delete_filled_rows field =
+  let f2 = filter (not . all (== static_value)) field
+  in  (replicate (height - length f2) (replicate width 0)) ++ f2
+
+complete_fall field = delete_filled_rows $ map (map complete_fall_one) field
 
 step_fall_column :: [Integer] -> [Integer]
 
