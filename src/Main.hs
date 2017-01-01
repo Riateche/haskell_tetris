@@ -25,7 +25,10 @@ query_command field = do
   check_fall new_field
 
 check_fall field | can_fall field = query_command (step_fall field)
-check_fall field = start_new_figure (complete_fall field)
+check_fall field = do
+  let f = complete_fall field
+  put_field f
+  start_new_figure f
 
 
 main :: IO ()

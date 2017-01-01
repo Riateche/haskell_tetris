@@ -5,7 +5,7 @@ import Data.List
 type Field = [[Integer]]
 
 width = 10
-height = 6
+height = 20
 
 empty_value = 0
 static_value = 1
@@ -21,13 +21,16 @@ empty_field = replicate height (replicate width 0)
 show_field d = intercalate "\n" (map show d)
 
 generate_figure :: String -> Field
-generate_figure name =
-    [[0,0,0,0,1,1,0,0,0,0],
-     [0,0,0,0,1,0,0,0,0,0],
-     [0,0,0,0,1,0,0,0,0,0],
-     [0,0,0,0,0,0,0,0,0,0],
-     [0,0,0,0,0,0,0,0,0,0],
-     [0,0,0,0,0,0,0,0,0,0]]
+generate_figure name = do
+  let figure = [[1, 1],[1, 0],[1, 0]]
+  let figure_columns = 2
+  let figure_rows = 3
+  let columns_to_left = (width - figure_columns) `div` 2
+  let columns_to_right = width - figure_columns - columns_to_left
+  let figure_with_columns =
+        map (\x -> (replicate columns_to_left 0) ++ x ++ (replicate columns_to_right 0)) figure
+  figure_with_columns ++ (replicate (height - figure_rows) (replicate width 0))
+
 
 add_figure :: Field -> Field -> Field
 add_figure x y = do
