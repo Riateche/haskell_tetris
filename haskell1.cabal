@@ -6,4 +6,4 @@ cabal-version:     >= 1.2
 executable haskell1
   main-is:         Main.hs
   hs-source-dirs:  src
-  build-depends:   base
+  build-depends:   base, ncurses
