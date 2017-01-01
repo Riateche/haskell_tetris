@@ -35,11 +35,21 @@ add_figure x y = do
 
 has_collision field = elem collision_value (intercalate [] field)
 
-can_fall field = True
+can_fall_column :: [Integer] -> Bool
+can_fall_column col | last col == falling_value = False
+can_fall_column col = do
+  let (static, dynamic) = separate_column col
+  all (\x -> x) (zipWith (\x y -> (x * y == 0)) static dynamic)
+
+can_fall field = all can_fall_column (transpose field)
 
 step_fall field = transpose (map step_fall_column (transpose field))
 apply_command field line = field
-complete_fall field = field
+
+complete_fall_one x | x == falling_value = static_value
+complete_fall_one x = x
+
+complete_fall field = map (map complete_fall_one) field
 
 step_fall_column :: [Integer] -> [Integer]
 
@@ -47,7 +57,12 @@ filter_int v x | x == v = x
 filter_int v x = 0
 
 step_fall_column col = do
+  let (static, dynamic) = separate_column col
+  zipWith (+) static dynamic
+
+separate_column col = do
   let static = map (filter_int static_value) col
-  let dynamic = map (filter_int falling_value) col
-  zipWith (+) static (0:(init dynamic))
+  let old_dynamic = map (filter_int falling_value) col
+  let dynamic = 0:(init old_dynamic)
+  (static, dynamic)
 
