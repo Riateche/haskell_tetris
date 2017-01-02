@@ -15,10 +15,11 @@ rnd_get gen = (gen, gen+1)
 random_figure_type value = figure_types !! (value `mod` (length figure_types))
 
 
-do_render window field = do
+do_render window field color = do
   updateWindow window $ do
     clear
     moveCursor 0 0
+    setColor color
     drawString $ show_field field
     drawString "\n\n"
   render
@@ -30,8 +31,8 @@ field_iteration field rnd_gen =
          in (add_figure (complete_fall field) fig, rnd_gen2)
 
 
-game_iteration window rnd_gen field = do
-  do_render window field
+game_iteration window rnd_gen field color = do
+  do_render window field color
   if has_collision field
     then do
       updateWindow window $ do
@@ -46,10 +47,10 @@ game_iteration window rnd_gen field = do
           case char of
             'q' -> closeWindow window
             's' -> let (field2, rnd_gen2) = field_iteration field rnd_gen
-                   in game_iteration window rnd_gen2 field2
-            _ -> game_iteration window rnd_gen $ apply_command field char
+                   in game_iteration window rnd_gen2 field2 color
+            _ -> game_iteration window rnd_gen (apply_command field char) color
         _ -> let (field2, rnd_gen2) = field_iteration field rnd_gen
-             in game_iteration window rnd_gen2 field2
+             in game_iteration window rnd_gen2 field2 color
 
 generate_random_figure rnd_gen =
   let (rnd_value1, rnd_gen1) = rnd_get rnd_gen
@@ -62,6 +63,7 @@ main :: IO ()
 main = runCurses $ do
   setEcho False
   window <- defaultWindow
+  color <- newColorID ColorRed ColorBlack 1
   let (fig, rnd_gen) = generate_random_figure rnd_new
   return ()
-  game_iteration window rnd_gen (add_figure empty_field fig)
+  game_iteration window rnd_gen (add_figure empty_field fig) color
