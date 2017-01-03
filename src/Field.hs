@@ -23,7 +23,7 @@ empty_field = replicate height (replicate width 0)
 show_cell value | value == 0 = ".."
                 | value == static_value = "██"
                 | value == falling_value = "▓▓"
-                | value == collision_value = "░░"
+                | value == collision_value = "xx"
 
 show_field :: Field -> String
 show_field field = intercalate "\n" $ map (\x -> intercalate "" (map show_cell x)) field
